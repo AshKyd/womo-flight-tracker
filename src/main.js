@@ -9,7 +9,7 @@ const geojsonSource = fetch("https://flights.kyd.au/aircrafts")
   .then((aircrafts) => ({
     type: "FeatureCollection",
     features: Object.values(aircrafts).flatMap((aircraft) =>
-      interpolateCoordinates(aircraft.lineString || [], 0.005).map((point) => ({
+      interpolateCoordinates(aircraft.lineString || [], 0.001).map((point) => ({
         type: "Feature",
         geometry: {
           type: "Point",
@@ -31,6 +31,11 @@ const map = new maplibregl.Map({
   },
 });
 
+map.fitBounds([
+  [152.789, -27.6268], // [west, south]
+  [153.219, -27.307], // [east, north]
+]);
+
 map.on("load", async () => {
   map.addControl(new maplibregl.NavigationControl());
 
@@ -47,7 +52,7 @@ map.on("load", async () => {
       // maxzoom: 9,
       paint: {
         // Increase the heatmap weight based on frequency and property magnitude
-        "heatmap-weight": 0.2,
+        "heatmap-weight": 0.03,
         // Increase the heatmap color weight weight by zoom level
         // heatmap-intensity is a multiplier on top of heatmap-weight
         "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 1, 9, 3],
@@ -59,22 +64,30 @@ map.on("load", async () => {
           ["linear"],
           ["heatmap-density"],
           0,
-          "rgba(33,102,172,0)",
+          "rgba(255,255,0, 0)",
           0.2,
-          "rgb(103,169,207)",
-          0.4,
-          "rgb(209,229,240)",
-          0.6,
-          "rgb(253,219,199)",
+          "rgba(255,255,0, 1)",
+          0.5,
+          "rgba(255,128,0,1)",
           0.8,
-          "rgb(239,138,98)",
+          "rgba(255, 77, 0, 1)",
           1,
-          "rgb(178,24,43)",
+          "rgba(255, 29, 29,1)",
         ],
-        // Adjust the heatmap radius by zoom level
-        "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 0, 2, 13, 20],
-        // Transition from heatmap to circle layer by zoom level
-        // "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 7, 1, 9, 0],
+        // Adjust the heatmap radius to be approximately 125 meters (250 meters wide)
+        // at every zoom level. The 'exponential' interpolation with a base of 2
+        // helps maintain a consistent real-world size as zoom levels change.
+        // At zoom 12, the radius will be ~3 pixels.
+        // At zoom 18, the radius will be ~210 pixels.
+        "heatmap-radius": [
+          "interpolate",
+          ["exponential", 1],
+          ["zoom"],
+          9,
+          3,
+          13,
+          30,
+        ],
       },
     },
     "waterway"
