@@ -26,12 +26,11 @@ const map = new maplibregl.Map({
   zoom: 8, // starting zoom
   attributionControl: {
     compact: true,
-    customAttribution:
-      [
+    customAttribution: [
         '© <a target="_blank" href="https://openstreetmap.org/">OSM contributors</a>',
         '<a target="_blank" href="https://adsb.fi/">Data: adsb.fi</a>',
-        'Powered by <a target="_blank" href="https://maplibre.org/">MapLibre</a>.',
-        ].join(' ♥ ');
+        'Powered by <a target="_blank" href="https://maplibre.org/">MapLibre</a>.'
+        ].join(' ♥ ')
   },
 });
 
