@@ -11,12 +11,20 @@ function sliceFeatureCollection(featureCollection, start, end) {
   };
 }
 
-const geojsonData = fetch("https://flights.kyd.au/aircrafts")
+function getAESTISOString() {
+  const now = new Date();
+  // Get UTC time, then add 10 hours
+  const aest = new Date(now.getTime() + 10 * 60 * 60 * 1000);
+  // Format as ISO 8601 without Z (local time)
+  return aest.toISOString().replace('Z', '+10:00');
+}
+
+const geojsonData = fetch(`https://flights.kyd.au/tracks/${getAESTISOString().slice(0, 10)}`)
   .then((res) => res.json())
   .then((aircrafts) => ({
     type: "FeatureCollection",
     features: Object.values(aircrafts).flatMap((aircraft) =>
-      interpolateCoordinates(aircraft.lineString || [], 0.001).map((point) => ({
+      interpolateCoordinates(aircraft.lineString || [], 0.005).map((point) => ({
         type: "Feature",
         geometry: {
           type: "Point",
@@ -53,6 +61,7 @@ map.on("load", async () => {
     data: await geojsonData,
   });
   geojsonFlightsPointsSource = map.getSource("geojson-flights-points");
+  console.log(await geojsonData);
 
   map.addLayer(
     {
