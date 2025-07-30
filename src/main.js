@@ -41,8 +41,11 @@ const map = new maplibregl.Map({
   zoom: 8, // starting zoom
   attributionControl: {
     compact: true,
-    customAttribution:
-      '© <a target="_blank" rel="noopener" href="https://openstreetmap.org/">OSM contributors</a> ♥ <a target="_blank" rel="noopener" href="https://donate.openstreetmap.org" class="donate-attr">Donate</a> ♥ Powered by <a target="_blank" rel="noopener" href="https://maplibre.org/">MapLibre</a>.',
+    customAttribution: [
+        '© <a target="_blank" href="https://openstreetmap.org/">OSM contributors</a>',
+        '<a target="_blank" href="https://adsb.fi/">Data: adsb.fi</a>',
+        'Powered by <a target="_blank" href="https://maplibre.org/">MapLibre</a>.'
+        ].join(' ♥ ')
   },
 });
 
