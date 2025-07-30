@@ -4,7 +4,14 @@ import maplibregl from "maplibre-gl";
 import mapStyle from "./mapstyle.json";
 import { interpolateCoordinates } from "./interpolate";
 
-const geojsonSource = fetch("https://flights.kyd.au/aircrafts")
+function sliceFeatureCollection(featureCollection, start, end) {
+  return {
+    type: "FeatureCollection",
+    features: featureCollection.features.slice(start, end),
+  };
+}
+
+const geojsonData = fetch("https://flights.kyd.au/aircrafts")
   .then((res) => res.json())
   .then((aircrafts) => ({
     type: "FeatureCollection",
@@ -36,13 +43,16 @@ map.fitBounds([
   [153.219, -27.307], // [east, north]
 ]);
 
+let geojsonFlightsPointsSource;
+
 map.on("load", async () => {
   map.addControl(new maplibregl.NavigationControl());
 
   map.addSource("geojson-flights-points", {
     type: "geojson",
-    data: await geojsonSource,
+    data: await geojsonData,
   });
+  geojsonFlightsPointsSource = map.getSource("geojson-flights-points");
 
   map.addLayer(
     {
