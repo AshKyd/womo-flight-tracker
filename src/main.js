@@ -3,6 +3,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl from "maplibre-gl";
 import mapStyle from "./mapstyle.json";
 import { interpolateCoordinates } from "./interpolate";
+import { debounce, throttle } from "lodash";
 
 function sliceFeatureCollection(featureCollection, start, end) {
   return {
@@ -10,6 +11,68 @@ function sliceFeatureCollection(featureCollection, start, end) {
     features: featureCollection.features.slice(start, end),
   };
 }
+
+function isInBbox(point, bounds) {
+  // bounds is a MapLibre bounds object from map.getBounds()
+  const [lng, lat] = point;
+  const sw = bounds.getSouthWest();
+  const ne = bounds.getNorthEast();
+  return lng >= sw.lng && lng <= ne.lng && lat >= sw.lat && lat <= ne.lat;
+}
+
+function extendBounds(bounds) {
+  // Add 100% extra space to all sides by doubling the width and height
+  const sw = bounds.getSouthWest();
+  const ne = bounds.getNorthEast();
+
+  const width = ne.lng - sw.lng;
+  const height = ne.lat - sw.lat;
+
+  const extendedSw = new maplibregl.LngLat(sw.lng - width, sw.lat - height);
+  const extendedNe = new maplibregl.LngLat(ne.lng + width, ne.lat + height);
+
+  return new maplibregl.LngLatBounds(extendedSw, extendedNe);
+}
+
+
+let geojsonFlightsPointsSource;
+let tracks;
+
+function setData() {
+  const interpolateAmount = 0.005; //zoom < 13 ? 0.005 : 0.001
+  const geojsonData = {
+    type: "FeatureCollection",
+    features: Object.values(tracks).flatMap((track) =>
+      interpolateCoordinates(track.lineString || [], interpolateAmount).map((point) => ({
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: point,
+        },
+      }))
+    ),
+  }
+  geojsonFlightsPointsSource.setData(geojsonData);
+}
+
+function getDateFromHash() {
+  const hash = window.location.hash.slice(1); // Remove the # symbol
+  if (hash && /^\d{4}-\d{2}-\d{2}$/.test(hash)) {
+    return hash;
+  }
+  return getAESTISOString().slice(0, 10);
+}
+
+async function refreshData() {
+  console.log('refreshing data')
+  tracks = await fetch(`https://flights.kyd.au/tracks/${getDateFromHash()}`)
+    .then((res) => res.json());
+
+  if (geojsonFlightsPointsSource) {
+    setData();
+  }
+}
+
 
 function getAESTISOString() {
   const now = new Date();
@@ -19,20 +82,7 @@ function getAESTISOString() {
   return aest.toISOString().replace('Z', '+10:00');
 }
 
-const geojsonData = fetch(`https://flights.kyd.au/tracks/${getAESTISOString().slice(0, 10)}`)
-  .then((res) => res.json())
-  .then((aircrafts) => ({
-    type: "FeatureCollection",
-    features: Object.values(aircrafts).flatMap((aircraft) =>
-      interpolateCoordinates(aircraft.lineString || [], 0.005).map((point) => ({
-        type: "Feature",
-        geometry: {
-          type: "Point",
-          coordinates: point,
-        },
-      }))
-    ),
-  }));
+const geojsonData = refreshData();
 
 const map = new maplibregl.Map({
   container: document.querySelector("#app"),
@@ -42,10 +92,10 @@ const map = new maplibregl.Map({
   attributionControl: {
     compact: true,
     customAttribution: [
-        '© <a target="_blank" href="https://openstreetmap.org/">OSM contributors</a>',
-        '<a target="_blank" href="https://adsb.fi/">Data: adsb.fi</a>',
-        'Powered by <a target="_blank" href="https://maplibre.org/">MapLibre</a>.'
-        ].join(' ♥ ')
+      '© <a target="_blank" href="https://openstreetmap.org/">OSM contributors</a>',
+      '<a target="_blank" href="https://adsb.fi/">Data: adsb.fi</a>',
+      'Powered by <a target="_blank" href="https://maplibre.org/">MapLibre</a>.'
+    ].join(' ♥ ')
   },
 });
 
@@ -54,17 +104,16 @@ map.fitBounds([
   [153.219, -27.307], // [east, north]
 ]);
 
-let geojsonFlightsPointsSource;
 
 map.on("load", async () => {
   map.addControl(new maplibregl.NavigationControl());
 
   map.addSource("geojson-flights-points", {
     type: "geojson",
-    data: await geojsonData,
+    data: { type: 'FeatureCollection', features: [] },
   });
   geojsonFlightsPointsSource = map.getSource("geojson-flights-points");
-  console.log(await geojsonData);
+  setData();
 
   map.addLayer(
     {
@@ -73,8 +122,7 @@ map.on("load", async () => {
       source: "geojson-flights-points",
       // maxzoom: 9,
       paint: {
-        // Increase the heatmap weight based on frequency and property magnitude
-        "heatmap-weight": 0.03,
+        "heatmap-weight": 0.01,
         // Increase the heatmap color weight weight by zoom level
         // heatmap-intensity is a multiplier on top of heatmap-weight
         "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 1, 9, 3],
@@ -87,31 +135,44 @@ map.on("load", async () => {
           ["heatmap-density"],
           0,
           "rgba(255,255,0, 0)",
+          0.05,
+          "rgba(255,255,0, .25)",
           0.2,
           "rgba(255,255,0, 1)",
-          0.5,
+          0.4,
           "rgba(255,128,0,1)",
           0.8,
           "rgba(255, 77, 0, 1)",
           1,
           "rgba(255, 29, 29,1)",
         ],
-        // Adjust the heatmap radius to be approximately 125 meters (250 meters wide)
-        // at every zoom level. The 'exponential' interpolation with a base of 2
-        // helps maintain a consistent real-world size as zoom levels change.
-        // At zoom 12, the radius will be ~3 pixels.
-        // At zoom 18, the radius will be ~210 pixels.
         "heatmap-radius": [
           "interpolate",
           ["exponential", 1],
           ["zoom"],
           9,
           3,
-          13,
+          12,
           30,
+          13,
+          50,
+          14,
+          100,
+          15,
+          200
         ],
       },
     },
     "waterway"
   );
+
+  if (!!window.location.hash.slice(1)) {
+    setInterval(() => {
+      if (document.visibilityState === "visible") {
+        refreshData();
+      }
+    }, 60 * 1000);
+    window.addEventListener('focus', refreshData)
+  }
+
 });
