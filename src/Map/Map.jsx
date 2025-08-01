@@ -24,6 +24,7 @@ export function Map() {
                 customAttribution: [
                     '© <a target="_blank" href="https://openstreetmap.org/">OSM contributors</a>',
                     '<a target="_blank" href="https://adsb.fi/">Data: adsb.fi</a>',
+                    '<a href="https://github.com/AshKyd/womo-flight-tracker">Source code</a>',
                     'Powered by <a target="_blank" href="https://maplibre.org/">MapLibre</a>.'
                 ].join(' ♥ ')
             },
