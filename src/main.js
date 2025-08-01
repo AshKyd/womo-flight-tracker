@@ -64,9 +64,10 @@ function getDateFromHash() {
 }
 
 async function refreshData() {
-  console.log('refreshing data')
-  tracks = await fetch(`https://flights.kyd.au/tracks/${getDateFromHash()}`)
+  console.log('refreshing data');
+  const data = await fetch(`https://flights.kyd.au/tracks/${getDateFromHash()}`)
     .then((res) => res.json());
+  tracks = data.tracks || data;
 
   if (geojsonFlightsPointsSource) {
     setData();
