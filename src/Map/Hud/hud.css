@@ -1,0 +1,20 @@
+.womo-hud {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  z-index: 10;
+  background: white;
+  box-shadow: 0 0 0 2px #0000001a;
+  color: black;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.womo-hud h1 {
+  font-size: inherit;
+  font-weight: bold;
+}
+.womo-hud p {
+  opacity: 0.8;
+}

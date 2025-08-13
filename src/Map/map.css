@@ -1,4 +1,37 @@
-.map {
-    width: 100vw;
-    height: 100vh;
+.map,
+.loader {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  transition: opacity 0.25s;
+}
+
+.map--loading {
+  opacity: 0;
+}
+
+.loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+.loader__spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 1000px;
+  border: 3px solid gray;
+  border-color: transparent transparent transparent #00000088;
+  animation: spin linear 1s infinite;
+  margin-bottom: 10px;
+}
+@keyframes spin {
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
