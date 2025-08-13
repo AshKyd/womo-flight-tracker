@@ -67,11 +67,15 @@ export function Map() {
 
   // Update heatmap data
   useEffect(() => {
-    if (!geojsonFlightsPointsSource || !geojson.value) {
+    if (
+      !geojsonFlightsPointsSource ||
+      !geojson.value ||
+      geojson.value.features?.length === 0
+    ) {
       return;
     }
     geojsonFlightsPointsSource.setData(geojson.value);
-    setStatus("loaded");
+    setStatus("ready");
   }, [geojsonFlightsPointsSource, geojson.value]);
 
   return (

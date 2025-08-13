@@ -8,7 +8,7 @@
   transition: opacity 0.25s;
 }
 
-.map--loading {
+.map--firstload {
   opacity: 0;
 }
 
