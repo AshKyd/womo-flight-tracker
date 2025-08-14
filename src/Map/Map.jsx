@@ -78,16 +78,31 @@ export function Map() {
     setStatus("ready");
   }, [geojsonFlightsPointsSource, geojson.value]);
 
+  useEffect(() => {
+    if (!geojsonFlightsPointsSource) {
+      return;
+    }
+    geojsonFlightsPointsSource.setData({
+      type: "FeatureCollection",
+      features: [],
+    });
+    if (status !== "firstload") {
+      setStatus("refreshing");
+    }
+  }, [date.value]);
+
   return (
     <>
-      <Hud title="Brisbane air traffic heatmap" date={`Live for ${date}`} />
-      <div class={`map map--${status}`} ref={rootNode}></div>
-      {status === "firstload" && (
+      <Hud title="Brisbane air traffic heatmap" date={date} />
+      {(status === "firstload" || status === "refreshing") && (
         <div class="loader">
-          <div class="loader__spinner"></div>
-          <div class="loader__text">Loading...</div>
+          <div class="loader__contents">
+            <div class="loader__spinner"></div>
+            <div class="loader__text">Loading...</div>
+          </div>
         </div>
       )}
+      <div class={`map map--${status}`} ref={rootNode}></div>
     </>
   );
 }

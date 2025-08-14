@@ -14,7 +14,5 @@
 .womo-hud h1 {
   font-size: inherit;
   font-weight: bold;
-}
-.womo-hud p {
-  opacity: 0.8;
+  margin-bottom: 5px;
 }
