@@ -51,15 +51,16 @@ export default function getState() {
     async function refreshData(reason) {
       console.log("refreshing data", { reason });
       status.value = "loading";
-      const data = await fetch(
-        `https://flights.kyd.au/tracks/${getDateFromHash()}`
-      ).then((res) => res.json());
+      const data = await fetch(`https://flights.kyd.au/tracks/${date}`).then(
+        (res) => res.json()
+      );
       tracks.value = data.tracks || data;
       status.value = "loaded";
     }
 
     // refresh data when
     effect(() => {
+      tracks.value = [];
       refreshData("new date " + date.value);
     });
 
