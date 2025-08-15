@@ -8,6 +8,7 @@ import {
 import { useEffect } from "preact/hooks";
 import { getScribbles } from "./scribbles";
 import getPoints from "./points";
+import polyline from "@mapbox/polyline";
 
 const hashSignal = signal(window.location.hash.slice(1));
 window.addEventListener("hashchange", () => {
@@ -62,9 +63,13 @@ export default function getState() {
       console.log("refreshing data", { reason });
       status.value = "loading";
       const data = await fetch(
-        `https://flights.kyd.au/tracks/${params.value.date}`
+        `https://flights.kyd.au/v2/tracks/${params.value.date}`
       ).then((res) => res.json());
-      tracks.value = data.tracks || data;
+      // Decode polyline data
+      Object.values(data.polylineTracks).forEach((track) => {
+        track.lineString = polyline.decode(track.lineString);
+      });
+      tracks.value = data.polylineTracks;
       aircrafts.value = data.aircrafts;
       status.value = "loaded";
     }

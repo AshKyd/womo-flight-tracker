@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mapbox/polyline": "^1.2.1",
     "@preact/signals": "^2.2.1",
     "geolib": "^3.3.4",
     "lodash": "^4.17.21",
