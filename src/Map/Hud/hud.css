@@ -16,3 +16,16 @@
   font-weight: bold;
   margin-bottom: 5px;
 }
+
+.womo-hud__controls {
+  display: flex;
+  gap: 5px;
+}
+.womo-hud__controls select {
+  padding: 5px 10px;
+}
+@media (max-width: 728px) {
+  .womo-hud__controls {
+    flex-direction: column;
+  }
+}

@@ -22,24 +22,26 @@ export default function Hud({ title }) {
   return (
     <div class="womo-hud">
       <h1>{title}</h1>
-      <select value={params.value.date} onChange={onChange}>
-        {pastFortnight.map((dateString) => (
-          <option key={dateString} value={dateString}>
-            {dateString}
-            {dateString === pastFortnight[0] ? " - today's live data" : ""}
-          </option>
-        ))}
-      </select>
-      <select
-        value={params.value.viz}
-        onChange={(e) => {
-          setParam({ viz: e.target.value });
-        }}
-      >
-        {["heatmap", "scribbles"].map((type) => (
-          <option value={type.toLowerCase()}>View as {type}</option>
-        ))}
-      </select>
+      <div class="womo-hud__controls">
+        <select value={params.value.date} onChange={onChange}>
+          {pastFortnight.map((dateString) => (
+            <option key={dateString} value={dateString}>
+              {dateString}
+              {dateString === pastFortnight[0] ? " - today's live data" : ""}
+            </option>
+          ))}
+        </select>
+        <select
+          value={params.value.viz}
+          onChange={(e) => {
+            setParam({ viz: e.target.value });
+          }}
+        >
+          {["heatmap", "scribbles"].map((type) => (
+            <option value={type.toLowerCase()}>View as {type}</option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 }
