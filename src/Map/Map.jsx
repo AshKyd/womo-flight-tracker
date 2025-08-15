@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "preact/hooks";
 import "maplibre-gl/dist/maplibre-gl.css";
-import maplibregl from "maplibre-gl";
+import maplibregl, { GeolocateControl } from "maplibre-gl";
 import heatmapJson from "./heatmap.json";
 import mapStyleJson from "./mapstyle.json";
 import "./map.css";
@@ -48,6 +48,15 @@ export function Map() {
 
     thisMap.on("load", async () => {
       thisMap.addControl(new maplibregl.NavigationControl());
+
+      thisMap.addControl(
+        new GeolocateControl({
+          positionOptions: {
+            enableHighAccuracy: false,
+          },
+          trackUserLocation: false,
+        })
+      );
       setMap(thisMap);
     });
 
