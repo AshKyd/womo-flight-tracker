@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@preact/signals": "^2.2.1",
+    "geolib": "^3.3.4",
     "lodash": "^4.17.21",
     "maplibre-gl": "^5.6.1",
     "preact": "^10.26.9"

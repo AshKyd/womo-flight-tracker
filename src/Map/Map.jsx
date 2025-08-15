@@ -4,8 +4,13 @@ import maplibregl from "maplibre-gl";
 import heatmapJson from "./heatmap.json";
 import mapStyleJson from "./mapstyle.json";
 import "./map.css";
-import getState from "./state";
+import getState, { params } from "./state/state";
 import Hud from "./Hud/Hud";
+
+const emptyGeoJson = {
+  type: "FeatureCollection",
+  features: [],
+};
 
 export function Map() {
   const [map, setMap] = useState();
@@ -13,7 +18,7 @@ export function Map() {
     useState();
   const [status, setStatus] = useState("firstload");
   const rootNode = useRef();
-  const { geojson, date } = getState();
+  const { geojsonPoints, geojsonScribble } = getState();
 
   //  Set up the map
   useEffect(() => {
@@ -67,33 +72,63 @@ export function Map() {
 
   // Update heatmap data
   useEffect(() => {
-    if (
-      !geojsonFlightsPointsSource ||
-      !geojson.value ||
-      geojson.value.features?.length === 0
-    ) {
+    if (!geojsonFlightsPointsSource) {
       return;
     }
-    geojsonFlightsPointsSource.setData(geojson.value);
+    if (params.value.viz !== "heatmap") {
+      geojsonFlightsPointsSource.setData(emptyGeoJson);
+      setStatus("ready");
+      return;
+    }
+    if (!geojsonPoints.value || geojsonPoints.value.features?.length === 0) {
+      return;
+    }
+    geojsonFlightsPointsSource.setData(geojsonPoints.value);
     setStatus("ready");
-  }, [geojsonFlightsPointsSource, geojson.value]);
+  }, [geojsonFlightsPointsSource, geojsonPoints.value, params.value.viz]);
+
+  useEffect(() => {
+    if (params.value.viz !== "scribbles" || !map) {
+      return;
+    }
+
+    console.log(geojsonScribble.value);
+
+    map.addSource("geojson-scribble", {
+      type: "geojson",
+      data: geojsonScribble.value || emptyGeoJson,
+    });
+
+    map.addLayer({
+      id: "geojson-scribble-layer",
+      type: "line",
+      source: "geojson-scribble",
+      paint: {
+        "line-color": "red",
+        "line-width": 1,
+        "line-opacity": 0.25,
+      },
+    });
+
+    return () => {
+      map.removeLayer("geojson-scribble-layer");
+      map.removeSource("geojson-scribble");
+    };
+  }, [geojsonScribble.value, params.value.viz, map]);
 
   useEffect(() => {
     if (!geojsonFlightsPointsSource) {
       return;
     }
-    geojsonFlightsPointsSource.setData({
-      type: "FeatureCollection",
-      features: [],
-    });
+    geojsonFlightsPointsSource.setData(emptyGeoJson);
     if (status !== "firstload") {
       setStatus("refreshing");
     }
-  }, [date.value]);
+  }, [params.value.date]);
 
   return (
     <>
-      <Hud title="Brisbane air traffic heatmap" date={date} />
+      <Hud title="Brisbane air traffic heatmap" />
       {(status === "firstload" || status === "refreshing") && (
         <div class="loader">
           <div class="loader__contents">
