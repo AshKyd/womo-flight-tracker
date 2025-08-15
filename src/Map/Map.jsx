@@ -132,6 +132,7 @@ export function Map() {
         ],
       },
     });
+    setStatus("ready");
 
     return () => {
       map.removeLayer("geojson-scribble-layer");
