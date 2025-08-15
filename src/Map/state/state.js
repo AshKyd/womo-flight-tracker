@@ -52,10 +52,10 @@ export function setParam(newValues) {
 
 export default function getState() {
   const tracks = useSignal([]);
+  const aircrafts = useSignal([]);
   const status = useSignal("loading");
   const geojsonPoints = getPoints({ params, tracks });
-
-  const geojsonScribble = getScribbles({ params, tracks });
+  const geojsonScribble = getScribbles({ params, tracks, aircrafts });
 
   useEffect(() => {
     async function refreshData(reason) {
@@ -65,6 +65,7 @@ export default function getState() {
         `https://flights.kyd.au/tracks/${params.value.date}`
       ).then((res) => res.json());
       tracks.value = data.tracks || data;
+      aircrafts.value = data.aircrafts;
       status.value = "loaded";
     }
 

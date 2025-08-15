@@ -92,8 +92,6 @@ export function Map() {
       return;
     }
 
-    console.log(geojsonScribble.value);
-
     map.addSource("geojson-scribble", {
       type: "geojson",
       data: geojsonScribble.value || emptyGeoJson,
@@ -104,15 +102,41 @@ export function Map() {
       type: "line",
       source: "geojson-scribble",
       paint: {
-        "line-color": "red",
+        "line-color": [
+          "case",
+          ["==", ["get", "category"], "A7"],
+          "green",
+          ["==", ["get", "category"], "A1"],
+          "orange",
+          ["==", ["get", "category"], ""],
+          "orange",
+          ["==", ["get", "category"], "A2"],
+          "red",
+          "red",
+        ],
         "line-width": 1,
-        "line-opacity": 0.25,
+        "line-opacity": ["case", ["==", ["get", "category"], "A7"], 1, 0.25],
       },
     });
+
+    // Add mouse move event listener for hover functionality
+    const onMouseMove = (e) => {
+      const features = map.queryRenderedFeatures(e.point, {
+        layers: ["geojson-scribble-layer"],
+      });
+
+      if (features.length > 0) {
+        const feature = features[0];
+        console.log("Hovered line category:", feature.properties?.category);
+      }
+    };
+
+    map.on("mousemove", onMouseMove);
 
     return () => {
       map.removeLayer("geojson-scribble-layer");
       map.removeSource("geojson-scribble");
+      map.off("mousemove", onMouseMove);
     };
   }, [geojsonScribble.value, params.value.viz, map]);
 
